@@ -278,6 +278,10 @@ function renderCheckbox(key, title, required, options, hint, other){
   return box;
 }
 
+function isEmailValid(v){
+  const s = String(v||"").trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
 function validatePage(){
   const a = state.answers;
   const p = pages[state.pageIndex];
@@ -474,6 +478,7 @@ async function submitAll(){
   }
 
 }
+
 
 
 
