@@ -100,13 +100,23 @@ const PLAN_OUTCALL = [
 // ====== 初期設定取得（google.script.run → fetch）======
 (async function init(){
   try {
-    const res = await fetch(`${API_URL}?action=config`);
-    const json = await res.json();
+    const res = await fetch(`${API_URL}?action=config`, { method: "GET" });
+    const text = await res.text(); // ←まずテキストで受ける
+
+    // JSONかどうかチェック
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (_) {
+      throw new Error(`configがJSONではありません。\nstatus=${res.status}\n先頭200文字=\n${text.slice(0,200)}`);
+    }
+
     if (!json.ok) throw new Error(json.message || "config取得に失敗");
     state.server = json.data;
     render();
+
   } catch (e) {
-    showError(`初期化に失敗しました。\n${e && e.message ? e.message : e}`);
+    showError(`初期化に失敗しました。\n${e?.message || e}`);
   }
 })();
 
@@ -553,6 +563,7 @@ state.answers.kimonoRental = items.includes("その他")
   }
 
 }
+
 
 
 
