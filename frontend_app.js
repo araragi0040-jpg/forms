@@ -4,7 +4,7 @@ const openedAtMs = Date.now();
  * ★ここをあなたの Apps Script WebアプリURL に差し替え
  * 例）https://script.google.com/macros/s/XXXXXXXXXXXX/exec
  */
-const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
+const API_URL = "https://araragi0040-jpg.github.io/forms/";
 
 window.addEventListener("error", (e) => {
   const msg = `JSエラー:\n${e.message}\n${e.filename}:${e.lineno}`;
@@ -468,4 +468,5 @@ async function submitAll(){
     toggleLoading(false);
     showError(`送信に失敗しました。\n${e && e.message ? e.message : e}`);
   }
+
 }
