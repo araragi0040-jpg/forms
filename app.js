@@ -278,6 +278,10 @@ function renderCheckbox(key, title, required, options, hint, other){
   return box;
 }
 
+function validatePage(){
+  const a = state.answers;
+  const p = pages[state.pageIndex];
+
 // ====== ページ描画 ======
 function render(){
   clearError();
@@ -470,5 +474,6 @@ async function submitAll(){
   }
 
 }
+
 
 
