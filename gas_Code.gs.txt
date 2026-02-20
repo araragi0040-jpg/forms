@@ -1,0 +1,360 @@
+/*******************************************************
+ * ご予約入力フォーム（GAS Webアプリ API）
+ * - フロント：GitHub Pages（静的HTML/JS）
+ * - API：Apps Script Webアプリ（JSON）
+ * - 保存先：スプレッドシート（シート名「フォーム」）
+ * - 保存：1行（チェック項目はカンマ区切り）
+ * - 同意：必須チェック＋同意証拠をスプシ保存
+ * - Bot対策：ページ表示から3秒以内の送信は拒否
+ * - 通知：管理者へ全文メール + お客様へ自動返信
+ *******************************************************/
+
+// ====== 設定（ここだけ最初に確認）======
+const CONFIG = {
+  SPREADSHEET_ID: "1UEjViDHKaHnBhDJ7kmNQiFMmz2xXilzhx8cLZnEeuqs",
+  SHEET_NAME: "フォーム",
+  ADMIN_EMAIL: "info@g-knowthyself.com",
+  TERMS_VERSION: "2025-12-18",
+  MIN_SUBMIT_SECONDS: 3,
+
+  CUSTOMER_SUBJECT: "【ご予約受付】内容を受け付けました",
+  CUSTOMER_BODY_HEADER:
+`この度はご予約ありがとうございます。
+内容を受け付けました。
+
+下記の内容で承っておりますので、ご確認ください。
+（内容確認のうえ、担当よりご連絡いたします）
+
+`,
+  CUSTOMER_BODY_FOOTER:
+`
+※このメールは自動送信です。返信いただいても確認できない場合があります。
+ご連絡は公式サイトまたはSNSのDM等からお願いいたします。
+
+――――――――――
+g-knowthyself
+`
+};
+
+// ====== API ======
+function doGet(e) {
+  const action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action) : "";
+
+  if (action === "config") {
+    return json_({
+      ok: true,
+      data: {
+        adminEmailMasked: maskEmail_(CONFIG.ADMIN_EMAIL),
+        sheetName: CONFIG.SHEET_NAME,
+        termsVersion: CONFIG.TERMS_VERSION,
+        minSubmitSeconds: CONFIG.MIN_SUBMIT_SECONDS
+      }
+    });
+  }
+
+  // ヘルスチェック（ブラウザで開いた時に分かるように）
+  return json_({ ok: true, message: "reservation API is running" });
+}
+
+function doPost(e) {
+  try {
+    const payload = parseBody_(e);
+    const res = submitReservation(payload);
+    return json_({ ok: true, ...res });
+  } catch (err) {
+    return json_({ ok: false, message: err && err.message ? err.message : String(err) });
+  }
+}
+
+// JSON返却（CORS対応）
+function json_(obj) {
+  const out = ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+
+  // 重要：GitHub Pages から叩くので CORS を許可
+  // ※ fetch を「シンプルリクエスト」にしているので、通常はこれで足ります
+  out.setHeader("Access-Control-Allow-Origin", "*");
+  out.setHeader("Access-Control-Allow-Methods", "GET,POST");
+  out.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  return out;
+}
+
+function parseBody_(e) {
+  if (!e || !e.postData || !e.postData.contents) throw new Error("送信データが空です");
+
+  const raw = e.postData.contents;
+
+  // fetch() で文字列送信するので、ここは JSON パースでOK
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch (_) {
+    throw new Error("送信データの形式が正しくありません（JSON parse error）");
+  }
+  if (!payload || !payload.answers) throw new Error("送信データが空です");
+  return payload;
+}
+
+// 送信（APIから呼ぶ）
+function submitReservation(payload) {
+  if (!payload || !payload.answers) throw new Error("送信データが空です");
+
+  // --- Bot対策：3秒以内送信を拒否（サーバー側でもガード） ---
+  const openedAtMs = Number(payload.openedAtMs || 0);
+  const nowMs = Date.now();
+  if (openedAtMs && (nowMs - openedAtMs) < CONFIG.MIN_SUBMIT_SECONDS * 1000) {
+    throw new Error("送信が早すぎます。少し待ってからもう一度送ってください。");
+  }
+
+  // --- 同意必須 ---
+  const a = payload.answers;
+  if (!a.privacyAgree || !a.cancelAgree || !a.otherAgree) {
+    throw new Error("個人情報・キャンセル規定・その他確認事項への同意が必要です。");
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30 * 1000);
+
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sheet = getOrCreateSheet_(ss, CONFIG.SHEET_NAME);
+
+    const headers = buildHeaders_();
+    ensureHeaderRow_(sheet, headers);
+
+    const submissionId = Utilities.getUuid();
+    const rowObj = buildRowObject_(a, submissionId);
+    const row = headers.map(h => rowObj[h] ?? "");
+
+    sheet.appendRow(row);
+
+    // 管理者メール
+    const adminBody = buildAdminMailBody_(a, submissionId);
+    MailApp.sendEmail({
+      to: CONFIG.ADMIN_EMAIL,
+      subject: `【新規予約】${a.name || "お客様"} / ID:${submissionId.slice(0, 8)}`,
+      body: adminBody
+    });
+
+    // お客様メール（自動返信）
+    const customerEmail = String(a.email || "").trim();
+    if (customerEmail) {
+      const customerBody = buildCustomerMailBody_(a, submissionId);
+      MailApp.sendEmail({
+        to: customerEmail,
+        subject: CONFIG.CUSTOMER_SUBJECT,
+        body: customerBody,
+        replyTo: CONFIG.ADMIN_EMAIL
+      });
+    }
+
+    return { submissionId };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ====== 内部関数（元コードそのまま） ======
+function buildHeaders_() {
+  return [
+    "timestamp",
+    "submission_id",
+
+    "email",
+    "name",
+    "postal",
+    "address",
+    "phone",
+
+    "shooting_contents",
+    "shooting_contents_other",
+
+    "preferred_dates",
+    "shooting_place",
+    "participants",
+    "main_person_name",
+
+    "dressing_need",
+    "dressing_detail",
+    "dressing_place",
+    "dressing_address_choice",
+    "dressing_address_other",
+    "parking_space",
+
+    "kimono_rental",
+    "kimono_rental_other",
+
+    "plan_type",
+    "plan_studio",
+    "plan_outcall",
+    "plan_set",
+
+    "options",
+    "payment_method",
+    "how_knew",
+    "how_knew_other",
+    "message",
+
+    "privacy_agree",
+    "cancel_agree",
+    "other_agree",
+    "agree_timestamp",
+    "terms_version",
+  ];
+}
+
+function buildRowObject_(answers, submissionId) {
+  const now = new Date();
+  const toCsv = (v) => Array.isArray(v) ? v.join(",") : (v ?? "");
+
+  return {
+    timestamp: Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+    submission_id: submissionId,
+
+    email: answers.email || "",
+    name: answers.name || "",
+    postal: answers.postal || "",
+    address: answers.address || "",
+    phone: answers.phone || "",
+
+    shooting_contents: toCsv(answers.shootingContents || []),
+    shooting_contents_other: answers.shootingContentsOther || "",
+
+    preferred_dates: toCsv(answers.preferredDates || []),
+    shooting_place: answers.shootingPlace || "",
+    participants: answers.participants || "",
+    main_person_name: answers.mainPersonName || "",
+
+    dressing_need: answers.dressingNeed || "",
+    dressing_detail: answers.dressingDetail || "",
+    dressing_place: answers.dressingPlace || "",
+    dressing_address_choice: answers.dressingAddressChoice || "",
+    dressing_address_other: answers.dressingAddressOther || "",
+    parking_space: answers.parkingSpace || "",
+
+    kimono_rental: toCsv(answers.kimonoRentalItems || []),
+    kimono_rental_other: answers.kimonoRentalOther || "",
+
+    plan_type: answers.planType || "",
+    plan_studio: answers.planStudio || "",
+    plan_outcall: answers.planOutcall || "",
+    plan_set: toCsv(answers.planSet || []),
+
+    options: toCsv(answers.options || []),
+    payment_method: answers.paymentMethod || "",
+    how_knew: answers.howKnew || "",
+    how_knew_other: answers.howKnewOther || "",
+    message: answers.message || "",
+
+    privacy_agree: !!answers.privacyAgree,
+    cancel_agree: !!answers.cancelAgree,
+    other_agree: !!answers.otherAgree,
+    agree_timestamp: Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+    terms_version: CONFIG.TERMS_VERSION,
+  };
+}
+
+function ensureHeaderRow_(sheet, headers) {
+  const lastCol = sheet.getLastColumn();
+  const firstRow = (lastCol > 0) ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  const isEmpty = firstRow.join("").trim() === "";
+
+  if (isEmpty) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+    return;
+  }
+
+  const existing = firstRow.filter(x => x !== "");
+  if (existing.length < headers.length) {
+    const missing = headers.slice(existing.length);
+    sheet.getRange(1, existing.length + 1, 1, missing.length).setValues([missing]);
+  }
+}
+
+function getOrCreateSheet_(ss, name) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  return sheet;
+}
+
+function buildAdminMailBody_(a, submissionId) {
+  const lines = [];
+  lines.push("ご予約フォームが送信されました。");
+  lines.push(`送信ID：${submissionId}`);
+  lines.push("");
+  lines.push("【同意】");
+  lines.push(`- 個人情報：${a.privacyAgree ? "同意" : "未同意"}`);
+  lines.push(`- キャンセル：${a.cancelAgree ? "同意" : "未同意"}`);
+  lines.push(`- 規定バージョン：${CONFIG.TERMS_VERSION}`);
+  lines.push("");
+  lines.push("【回答内容】");
+  lines.push(renderAnswerText_(a));
+  return lines.join("\n");
+}
+
+function buildCustomerMailBody_(a, submissionId) {
+  const lines = [];
+  lines.push(CONFIG.CUSTOMER_BODY_HEADER);
+  lines.push(`送信ID：${submissionId}`);
+  lines.push("");
+  lines.push("【回答内容】");
+  lines.push(renderAnswerText_(a));
+  lines.push("");
+  lines.push(CONFIG.CUSTOMER_BODY_FOOTER);
+  return lines.join("\n");
+}
+
+function renderAnswerText_(a) {
+  const toCsv = (v) => Array.isArray(v) ? v.join(", ") : (v ?? "");
+  const rows = [
+    ["メールアドレス", a.email],
+    ["お名前", a.name],
+    ["郵便番号", a.postal],
+    ["ご住所", a.address],
+    ["お電話番号", a.phone],
+
+    ["撮影内容", toCsv(a.shootingContents)],
+    ["撮影内容（その他）", a.shootingContentsOther],
+
+    ["撮影希望日（第1〜第3）", toCsv(a.preferredDates)],
+    ["撮影場所（出張の場合）", a.shootingPlace],
+    ["ご参加人数", a.participants],
+    ["主役のお名前/英字表記", a.mainPersonName],
+
+    ["着付けヘアセット希望", a.dressingNeed],
+    ["着付け詳細", a.dressingDetail],
+    ["着付け希望場所", a.dressingPlace],
+    ["着付け住所（同上/その他）", a.dressingAddressChoice],
+    ["着付け住所（その他内容）", a.dressingAddressOther],
+    ["駐車スペース", a.parkingSpace],
+
+    ["着物レンタル希望", toCsv(a.kimonoRentalItems)],
+    ["着物レンタル（その他）", a.kimonoRentalOther],
+
+    ["撮影プラン", a.planType],
+    ["写真館プラン", a.planStudio],
+    ["出張プラン", a.planOutcall],
+    ["セットプラン選択", toCsv(a.planSet)],
+
+    ["パネル/アルバム", toCsv(a.options)],
+    ["お支払い方法", a.paymentMethod],
+    ["何で知りましたか", a.howKnew],
+    ["紹介など（その他）", a.howKnewOther],
+    ["備考", a.message]
+  ];
+
+  return rows
+    .filter(([_, v]) => String(v ?? "").trim() !== "")
+    .map(([k, v]) => `- ${k}：${v}`)
+    .join("\n");
+}
+
+function maskEmail_(email) {
+  const [user, domain] = String(email).split("@");
+  if (!domain) return email;
+  const head = user.slice(0, 1);
+  return `${head}***@${domain}`;
+}
