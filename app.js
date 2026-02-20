@@ -518,6 +518,12 @@ async function submitAll(){
 
   cleanupByBranch();
 
+  // kimonoRental を Code.gs 側仕様に合わせて生成（送信直前に作る）
+const items = state.answers.kimonoRentalItems || [];
+state.answers.kimonoRental = items.includes("その他")
+  ? items.map(x => x === "その他" ? `その他（${state.answers.kimonoRentalOther || ""}）` : x)
+  : items;
+
   const payload = {
     openedAtMs,
     answers: state.answers
@@ -547,6 +553,7 @@ async function submitAll(){
   }
 
 }
+
 
 
 
