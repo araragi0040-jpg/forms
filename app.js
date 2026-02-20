@@ -4,7 +4,7 @@ const openedAtMs = Date.now();
  * ★ここをあなたの Apps Script WebアプリURL に差し替え
  * 例）https://script.google.com/macros/s/XXXXXXXXXXXX/exec
  */
-const API_URL = "https://docs.google.com/spreadsheets/d/1-GVil3D5En4fpNiiAW7X0CUJ4cgnijCtT2C2dY9aKME/edit?gid=2130172993#gid=2130172993";
+const API_URL = "https://script.google.com/macros/s/AKfycbzKqm_xJUsupI5te7GnY6sq6hYTLUblt4SUW2Q_5SG3gD8qCwHHq4OS309s4-p_sfKM/exec";
 
 window.addEventListener("error", (e) => {
   const msg = `JSエラー:\n${e.message}\n${e.filename}:${e.lineno}`;
@@ -470,4 +470,5 @@ async function submitAll(){
   }
 
 }
+
 
