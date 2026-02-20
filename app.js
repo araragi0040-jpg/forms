@@ -282,10 +282,79 @@ function isEmailValid(v){
   const s = String(v||"").trim();
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
+
 function validatePage(){
   const a = state.answers;
   const p = pages[state.pageIndex];
 
+  // ページごとの必須チェック
+  if (p.fields.includes("email")){
+    if (!String(a.email||"").trim()) return "メールアドレスは必須です。";
+    if (!isEmailValid(a.email)) return "メールアドレスの形が違うかもです（例：aaa@bbb.com）";
+  }
+  if (p.fields.includes("name") && !String(a.name||"").trim()) return "お名前は必須です。";
+  if (p.fields.includes("postal") && !String(a.postal||"").trim()) return "郵便番号は必須です。";
+  if (p.fields.includes("address") && !String(a.address||"").trim()) return "ご住所は必須です。";
+  if (p.fields.includes("phone")){
+    if (!String(a.phone||"").trim()) return "お電話番号は必須です。";
+    a.phone = formatPhone(a.phone);
+  }
+
+  if (p.fields.includes("shootingContents")){
+    if (!Array.isArray(a.shootingContents) || a.shootingContents.length === 0) return "撮影内容は必須です。";
+    if (a.shootingContents.includes("その他") && !String(a.shootingContentsOther||"").trim()) {
+      return "撮影内容で「その他」を選んだ場合は内容を入力してください。";
+    }
+  }
+
+  if (p.fields.includes("shootingPlace") && !String(a.shootingPlace||"").trim()) return "撮影場所は必須です。";
+  if (p.fields.includes("participants") && !String(a.participants||"").trim()) return "ご参加人数は必須です。";
+  if (p.fields.includes("mainPersonName") && !String(a.mainPersonName||"").trim()) return "主役のお名前/英字表記は必須です。";
+
+  if (p.fields.includes("dressingNeed") && !String(a.dressingNeed||"").trim()) return "着付け希望は必須です。";
+  if (p.fields.includes("dressingDetail") && a.dressingNeed && a.dressingNeed !== "無し"){
+    if (!String(a.dressingDetail||"").trim()) return "着付け詳細は必須です。";
+    if (!String(a.dressingPlace||"").trim()) return "着付け希望場所は必須です。";
+    if (a.dressingPlace === "ご自宅"){
+      if (!String(a.dressingAddressChoice||"").trim()) return "着付け住所（同上/その他）は必須です。";
+      if (a.dressingAddressChoice === "その他" && !String(a.dressingAddressOther||"").trim()) return "着付け住所の「その他」を入力してください。";
+      if (!String(a.parkingSpace||"").trim()) return "駐車スペースは必須です。";
+    }
+  }
+
+  if (p.fields.includes("kimonoRental")) {
+    const items = a.kimonoRentalItems || [];
+    if (!Array.isArray(items) || items.length === 0) return "着物レンタル希望は必須です。";
+    if (items.includes("その他") && !String(a.kimonoRentalOther || "").trim()) {
+      return "レンタルで「その他」を選んだ場合は内容を入力してください。";
+    }
+  }
+
+  if (p.fields.includes("planType") && !String(a.planType||"").trim()) return "撮影プランは必須です。";
+  if (p.fields.includes("planStudio") && String(a.planType||"").startsWith("写真館撮影")){
+    if (!String(a.planStudio||"").trim()) return "写真館プランを選択してください。";
+  }
+  if (p.fields.includes("planOutcall") && String(a.planType||"").startsWith("出張撮影")){
+    if (!String(a.planOutcall||"").trim()) return "出張プランを選択してください。";
+  }
+  if (p.fields.includes("planSet") && String(a.planType||"").startsWith("セットプラン")){
+    if (!Array.isArray(a.planSet) || a.planSet.length === 0) return "セットプランの中身（写真館＋出張）を選択してください。";
+  }
+
+  if (p.fields.includes("paymentMethod") && !String(a.paymentMethod||"").trim()) return "お支払い方法は必須です。";
+  if (p.fields.includes("howKnew")){
+    if (!String(a.howKnew||"").trim()) return "何で知りましたか？は必須です。";
+    if (a.howKnew === "その他" && !String(a.howKnewOther||"").trim()) return "「その他」を選んだ場合は内容を入力してください。";
+  }
+
+  if (p.fields.includes("agreements")){
+    if (!a.privacyAgree || !a.cancelAgree || !a.otherAgree) {
+      return "個人情報・キャンセル規定・その他確認事項への同意が必要です。";
+    }
+  }
+
+  return null;
+}
 // ====== ページ描画 ======
 function render(){
   clearError();
@@ -478,6 +547,7 @@ async function submitAll(){
   }
 
 }
+
 
 
 
