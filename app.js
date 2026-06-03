@@ -654,8 +654,11 @@ if (page.fields.includes("dressingNeed")) {
   "空いている日時をご確認のうえ、上の入力欄にご希望日時をご記入ください。"
 );
 
+/*const calendarUrl =
+  "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";*/
+
 const calendarUrl =
-  "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";
+  "https://calendar.app.google/nF24uBwBLgW8bn9F7";
 
 // 縮小率（0.7〜0.9くらいで調整）
 const previewScale = 0.78;
