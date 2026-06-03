@@ -654,8 +654,9 @@ if (page.fields.includes("dressingNeed")) {
   "空いている日時をご確認のうえ、上の入力欄にご希望日時をご記入ください。"
 );
 
-const calendarUrl =
+/*const calendarUrl =
   "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3nOSmck3Fu5BEkm0tpphcT98B5bEZmxropjzF9OpA_Fe6woTLX2XvYrzedCvLJWxH0AImDO2el?gv=true";
+  */
 
 // 縮小率（0.7〜0.9くらいで調整）
 const previewScale = 0.78;
