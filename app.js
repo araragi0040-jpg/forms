@@ -5,6 +5,10 @@ const openedAtMs = Date.now();
 // ★Vercel経由で叩く
 const API_BASE = "/api/forms";
 
+// 埋め込みGoogleカレンダー表示設定
+// false：非表示 / true：表示
+const SHOW_EMBED_CALENDAR = false;
+
 let lastGlobalErrorMsg = "";
 let lastGlobalErrorAt = 0;
 
@@ -648,6 +652,7 @@ if (page.fields.includes("dressingNeed")) {
     timeBox.appendChild(timeSelect);
     pageRoot.appendChild(timeBox);
 
+    if (SHOW_EMBED_CALENDAR) {
     const calBox = makeInputBox(
   "空き状況確認用カレンダー（着付け無しの場合）",
   false,
@@ -698,6 +703,7 @@ link.innerHTML =
 
 calBox.appendChild(link);
 pageRoot.appendChild(calBox);
+}
 }
 }
 
