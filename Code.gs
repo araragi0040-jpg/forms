@@ -6,12 +6,13 @@
 
 // ====== 設定 ======
 const CONFIG = {
-  SPREADSHEET_ID: "1SSUdZ1vh4m1NW-xWUHFdaueLHkiN3e5ysLh49QubMLg",
+  SPREADSHEET_ID: "19ebajuqC4fYYVofkrPMXE2OSKVir76dOGYdsPoQA20w",
   SHEET_NAME: "フォーム",
-  ADMIN_EMAIL: "fujii@g-knowthyself.com,photoworks.toiro@gmail.com",
+  /*ADMIN_EMAIL: "fujii@g-knowthyself.com,photoworks.toiro@gmail.com",*/
+  ADMIN_EMAIL: "fujii@g-knowthyself.com",
   TERMS_VERSION: "2025-12-18",
   MIN_SUBMIT_SECONDS: 3,
-  CALENDAR_ID: "syashinkantoiro@gmail.com",
+  CALENDAR_ID: "araragi0040@gmail.com",
   SLOT_LABELS: ["10:00", "11:30", "13:00", "14:30", "16:00"],
   SLOT_DURATION_MIN: 90,
 
@@ -152,8 +153,18 @@ function submitReservation(payload) {
 
       const slot = getSlotWindow_(a.preferredDate, a.preferredTime);
       const title = String(a.name || "").trim() || "予約";
-      getCalendar_().createEvent(title, slot.start, slot.end);
-    }
+      const description = [
+      `メールアドレス：${String(a.email || "").trim()}`,
+      `電話番号：${String(a.phone || "").trim()}`,
+      `撮影場所：${String(a.shootingPlace || "").trim()}`
+      ]
+      .filter(line => !line.endsWith("："))
+      .join("\n");
+
+      getCalendar_().createEvent(title, slot.start, slot.end, {
+      description: description
+      });
+      }
 
     const rowObj = buildRowObject_(a, submissionId);
     const map = buildHeaderKeyMap_();
