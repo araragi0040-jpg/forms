@@ -9,6 +9,10 @@ const API_BASE = "/api/forms";
 // false：非表示 / true：表示
 const SHOW_EMBED_CALENDAR = true;
 
+// bot対策用の隠し項目名
+// 「website」はブラウザ自動入力に反応しやすいため、推測されにくい名前に変更
+const HONEYPOT_NAME = "__hp_reservation_check_9f3";
+
 let lastGlobalErrorMsg = "";
 let lastGlobalErrorAt = 0;
 
@@ -180,12 +184,13 @@ function clearError(){ errBox.style.display="none"; errBox.textContent=""; }
 function toggleLoading(on){ overlay.style.display = on ? "flex" : "none"; }
 
 function ensureHoneypotInput(){
-  if (document.querySelector('input[name="website"][data-honeypot="1"]')) return;
+  if (document.querySelector(`input[name="${HONEYPOT_NAME}"][data-honeypot="1"]`)) return;
 
   const hpInput = document.createElement("input");
   hpInput.type = "text";
-  hpInput.name = "website";
-  hpInput.autocomplete = "off";
+  hpInput.name = HONEYPOT_NAME;
+  hpInput.value = "";
+  hpInput.autocomplete = "new-password";
   hpInput.tabIndex = -1;
   hpInput.setAttribute("aria-hidden", "true");
   hpInput.setAttribute("data-honeypot", "1");
@@ -1330,9 +1335,11 @@ async function submitAll(){
     : JSON.parse(JSON.stringify(state.answers));
 
   ensureHoneypotInput();
-  const hpEl = document.querySelector('input[name="website"][data-honeypot="1"]');
+  const hpEl = document.querySelector(`input[name="${HONEYPOT_NAME}"][data-honeypot="1"]`);
   const payload = {
     formToken: state.formToken || "",
+    // GAS側は payload.website をbot判定に使っているためキー名は維持
+    // input名だけ自動入力されにくいものへ変更
     website: hpEl ? hpEl.value : "",
     answers: sendAnswers
   };
