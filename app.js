@@ -7,7 +7,7 @@ const API_BASE = "/api/forms";
 
 // 埋め込みGoogleカレンダー表示設定
 // false：非表示 / true：表示
-const SHOW_EMBED_CALENDAR = false;
+const SHOW_EMBED_CALENDAR = true;
 
 let lastGlobalErrorMsg = "";
 let lastGlobalErrorAt = 0;
