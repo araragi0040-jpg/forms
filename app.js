@@ -663,7 +663,7 @@ if (page.fields.includes("dressingNeed")) {
   "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";*/
 
 const calendarUrl =
-  "https://calendar.app.google/hgdWFS2JxqQ5zmbE6";
+  "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";
 
 /* const calendarUrl =
   "https://calendar.app.google/nF24uBwBLgW8bn9F7"; */
