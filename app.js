@@ -118,13 +118,13 @@ const pages = [
 
 // セット候補
 const PLAN_STUDIO = [
-  "【１番人気🥇】プレミアムプラン (全データ/A4木製ガラスパネル) ¥65,000→¥59,800",
-  "スタンダードプラン (全データ込み) ¥45,000",
-  "ライトプラン (5データのみ) ¥35,000 ※データはお客様セレクト"
+  "プレミアムプラン(全データ/A4木製ガラスパネル) ¥65,000→¥59,800",
+  "スタンダードプラン(全データ込み) ¥45,000",
+  "ライトプラン(データ5点) ¥35,000 ※データはお客様セレクト"
 ];
 const PLAN_OUTCALL = [
-  "プレミアムプラン (全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥80,000→¥69,800",
-  "【１番人気🥇】スタンダードプラン(全データ/2L木製ガラスパネル/2面台紙) ¥70,000→¥59,800",
+  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥80,000→¥69,800",
+  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) ¥70,000→¥59,800",
   "スマートプラン(全データ/2L木製ガラスパネル) ¥45,000"
 ];
 
@@ -279,12 +279,12 @@ function cleanupByBranch(){
 
   // options 表示順固定
   const optMaster = [
-    "① A4木製ガラスパネル (305×220mm) ¥20,000",
-    "② 2面アルバム (216×216mm) ¥25,000",
-    "③ 3面アルバム (216×216mm) ¥30,000",
-    "④ アルバム10P M (216×216mm) ¥35,000",
-    "⑤ アルバム10P L (305×305mm) ¥40,000",
-    "⑥ クリスタルアルバム10P (301×299mm) ¥55,000"
+    "① A4木製ガラスパネル(305×220mm) ¥20,000",
+    "② 2面アルバム(216×216mm) ¥25,000",
+    "③ 3面アルバム(216×216mm) ¥30,000",
+    "④ アルバム10P M(216×216mm) ¥35,000",
+    "⑤ アルバム10P L(305×305mm) ¥40,000",
+    "⑥ クリスタルアルバム10P(301×299mm) ¥55,000"
   ];
   if (Array.isArray(a.options)) {
     a.options = a.options
@@ -517,7 +517,7 @@ function render(){
     pageRoot.appendChild(
       renderCheckbox(
         "shootingContents",
-        "撮影内容（複数選択）",
+        "撮影内容(複数選択)",
         true,
         ["家族撮影","お宮参り撮影","バースデー撮影","七五三撮影","入学園/卒学園撮影","成人式撮影","還暦撮影(米寿なども含む)","ペット撮影","ウェディング前撮り","挙式披露宴撮影","その他"],
         "当てはまるものをすべて選択してください。",
@@ -539,7 +539,7 @@ function render(){
     const grid = document.createElement("div"); grid.className="grid";
 
     if (page.fields.includes("participants")){
-      const box = makeInputBox("ご参加人数", true, "例：5名（父/母/主役1歳女の子/祖父/祖母）");
+      const box = makeInputBox("ご参加人数", true, "例：5名(父/母/主役1歳女の子/祖父/祖母)");
       const input = document.createElement("input"); input.type="text";
       input.value = state.answers.participants;
       input.addEventListener("input", ()=> state.answers.participants = input.value);
@@ -607,7 +607,7 @@ if (page.fields.includes("dressingNeed")) {
     const timeBox = makeInputBox(
       "ご希望時間帯",
       true,
-      "日付を選ぶと、空き枠のみ選択できます（90分枠）"
+      "日付を選ぶと、空き枠のみ選択できます(90分枠)"
     );
     const timeSelect = document.createElement("select");
     const dateSelected = !!String(state.answers.preferredDate || "").trim();
@@ -654,7 +654,7 @@ if (page.fields.includes("dressingNeed")) {
 
     if (SHOW_EMBED_CALENDAR) {
     const calBox = makeInputBox(
-  "空き状況確認用カレンダー（着付け無しの場合）",
+  "空き状況確認用カレンダー(着付け無しの場合)",
   false,
   "空いている日時をご確認のうえ、上の入力欄にご希望日時をご記入ください。"
 );
@@ -744,7 +744,7 @@ pageRoot.appendChild(calBox);
 
       const other = document.createElement("input");
       other.type="text";
-      other.placeholder="その他の住所（必要な場合）";
+      other.placeholder="その他の住所(必要な場合)";
       other.value = state.answers.dressingAddressOther;
       const enabled = (state.answers.dressingAddressChoice === "その他");
       other.disabled = !enabled;
@@ -766,7 +766,7 @@ pageRoot.appendChild(calBox);
     wrap.className = "choices";
 
     const OPTIONS = [
-      "お支度セットプラン（着物/小物一式レンタル/着付けヘアセット代含む）",
+      "お支度セットプラン(着物/小物一式レンタル/着付けヘアセット代含む)",
       "訪問着",
       "産着",
       "七五三着物",
@@ -836,15 +836,15 @@ pageRoot.appendChild(calBox);
   if (page.fields.includes("planType")){
     pageRoot.appendChild(
       renderRadio("planType","ご希望の撮影プラン",true,[
-        "写真館撮影 35,000円~",
+        "写真館撮影",
         "出張撮影 ※東大阪市のみ出張費無料",
-        "セットプラン(写真館&出張撮影) 合計金額 -5,000円OFF🉐"
+        "セットプラン(写真館&出張撮影) 合計金額 -5,000円OFF"
       ],"")
     );
   }
 
   if (page.fields.includes("planStudio") && String(state.answers.planType||"").startsWith("写真館撮影")){
-    pageRoot.appendChild(renderRadio("planStudio","写真館撮影プラン（当日変更OK）",true, PLAN_STUDIO,""));
+    pageRoot.appendChild(renderRadio("planStudio","写真館撮影プラン(当日変更OK)",true, PLAN_STUDIO,""));
   }
 
   if (page.fields.includes("planOutcall") && String(state.answers.planType||"").startsWith("出張撮影")){
@@ -854,7 +854,7 @@ pageRoot.appendChild(calBox);
   if (page.fields.includes("planSet") && String(state.answers.planType||"").startsWith("セットプラン")){
     const opts = ["▼写真館撮影", ...PLAN_STUDIO, "▼出張撮影", ...PLAN_OUTCALL];
 
-    const box = makeInputBox("セットプラン選択（写真館＋出張）", true, "合計から5,000円OFFになります");
+    const box = makeInputBox("セットプラン選択(写真館＋出張)", true, "合計から5,000円OFFになります");
     const wrap = document.createElement("div"); wrap.className="choices";
     const cur = new Set(state.answers.planSet || []);
 
@@ -890,13 +890,13 @@ pageRoot.appendChild(calBox);
   // options
   if (page.fields.includes("options")){
     pageRoot.appendChild(
-      renderCheckbox("options","パネル/アルバム（任意）",false,[
-        "① A4木製ガラスパネル (305×220mm) ¥20,000",
-        "② 2面アルバム (216×216mm) ¥25,000",
-        "③ 3面アルバム (216×216mm) ¥30,000",
-        "④ アルバム10P M (216×216mm) ¥35,000",
-        "⑤ アルバム10P L (305×305mm) ¥40,000",
-        "⑥ クリスタルアルバム10P (301×299mm) ¥55,000"
+      renderCheckbox("options","パネル/アルバム(任意)",false,[
+        "① A4木製ガラスパネル(305×220mm) ¥20,000",
+        "② 2面アルバム(216×216mm) ¥25,000",
+        "③ 3面アルバム(216×216mm) ¥30,000",
+        "④ アルバム10P M(216×216mm) ¥35,000",
+        "⑤ アルバム10P L(305×305mm) ¥40,000",
+        "⑥ クリスタルアルバム10P(301×299mm) ¥55,000"
       ],"ご予約時のご注文に限り → 表記価格より10%OFF")
     );
   }
@@ -940,7 +940,7 @@ pageRoot.appendChild(calBox);
   }
 
   if (page.fields.includes("message")){
-    const box = makeInputBox("備考（任意）", false, "");
+    const box = makeInputBox("備考(任意)", false, "");
     const ta = document.createElement("textarea");
     ta.value = state.answers.message;
     ta.addEventListener("input", ()=> state.answers.message = ta.value);
@@ -953,19 +953,19 @@ pageRoot.appendChild(calBox);
     box.className = "q";
     const t = document.createElement("div");
     t.className = "t";
-    t.textContent = "同意（送信に必要です）";
+    t.textContent = "同意(送信に必要です)";
     const r = document.createElement("span"); r.className="req"; r.textContent="必須";
     t.appendChild(r);
     box.appendChild(t);
 
     const details1 = document.createElement("details");
     const sum1 = document.createElement("summary");
-    sum1.textContent = "個人情報の取扱い（タップで表示）";
+    sum1.textContent = "個人情報の取扱い(タップで表示)";
     const body1 = document.createElement("div");
     body1.className = "terms";
     body1.textContent =
 `・ご入力いただいた情報は、ご予約対応・連絡・サービス提供の目的で利用します。
-・第三者へ提供しません（法令に基づく場合を除きます）。
+・第三者へ提供しません(法令に基づく場合を除きます)。
 ・必要に応じて、確認のためご連絡する場合があります。`;
     details1.appendChild(sum1); details1.appendChild(body1);
 
@@ -1003,7 +1003,7 @@ pageRoot.appendChild(calBox);
 
 if (page.fields.includes("review")){
   // 外枠（内容確認）
-  const outerBox = makeInputBox("内容確認（送信前）", false, "");
+  const outerBox = makeInputBox("内容確認(送信前)", false, "");
 
   // 説明文
   const lead = document.createElement("div");
@@ -1190,7 +1190,7 @@ function validatePage(){
   if (p.fields.includes("postal")){
     const postal = String(a.postal || "").trim();
     if (!postal) return "郵便番号は必須です。";
-    if (!/^\d{3}-?\d{4}$/.test(postal)) return "郵便番号の形式が違います（例：123-4567）。";
+    if (!/^\d{3}-?\d{4}$/.test(postal)) return "郵便番号の形式が違います(例：123-4567)。";
   }
   if (p.fields.includes("address") && !String(a.address||"").trim()) return "ご住所は必須です。";
   if (p.fields.includes("phone")){
@@ -1223,7 +1223,7 @@ function validatePage(){
     if (!String(a.dressingDetail||"").trim()) return "着付け詳細は必須です。";
     if (!String(a.dressingPlace||"").trim()) return "着付け希望場所は必須です。";
     if (a.dressingPlace === "ご自宅"){
-      if (!String(a.dressingAddressChoice||"").trim()) return "着付け住所（同上/その他）は必須です。";
+      if (!String(a.dressingAddressChoice||"").trim()) return "着付け住所(同上/その他)は必須です。";
       if (a.dressingAddressChoice === "その他" && !String(a.dressingAddressOther||"").trim())
         return "着付け住所の「その他」を入力してください。";
       if (!String(a.parkingSpace||"").trim()) return "駐車スペースは必須です。";
