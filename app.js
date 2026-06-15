@@ -854,7 +854,7 @@ pageRoot.appendChild(calBox);
   if (page.fields.includes("planSet") && String(state.answers.planType||"").startsWith("セットプラン")){
     const opts = ["▼写真館撮影", ...PLAN_STUDIO, "▼出張撮影", ...PLAN_OUTCALL];
 
-    const box = makeInputBox("セットプラン選択(写真館＋出張)", true, "合計から5,000円OFFになります");
+    const box = makeInputBox("セットプラン選択(写真館＋出張)", true, "合計金額より5,000円OFFになります");
     const wrap = document.createElement("div"); wrap.className="choices";
     const cur = new Set(state.answers.planSet || []);
 
