@@ -1162,12 +1162,26 @@ function rowL2NoMark(text, group){
 
   let displayHtml = strikeHtml_(text);
 
-  // 内容確認のパネル/アルバム欄のみ、⑥をスマホで見やすい3段表示にする
-  if (group === "panel" && String(text).startsWith("⑥ クリスタルアルバム10P")) {
-    displayHtml =
-      `⑥ クリスタルアルバム10P<br>` +
-      `(301×299mm)<br>` +
-      `<s>¥55,000</s> ➡ 10%OFF ¥49,500`;
+  // 内容確認のパネル/アルバム欄のみ、商品名＋金額の2行表示にする
+  if (group === "panel") {
+    const raw = String(text || "").trim();
+
+    // 例：
+    // ①A4木製ガラスパネル <s>¥20,000</s> ➡ 10%OFF ¥18,000
+    // ① A4木製ガラスパネル <s>¥20,000</s> ➡ 10%OFF ¥18,000
+    const match = raw.match(/^(①|②|③|④|⑤|⑥)\s*(.+?)\s+(<s>¥[\d,]+<\/s>|¥[\d,]+)\s*(→|➡)\s*(.+)$/);
+
+    if (match) {
+      const no = match[1];
+      const itemName = match[2];
+      const originalPrice = match[3];
+      const arrow = match[4];
+      const discountPrice = match[5];
+
+      displayHtml =
+        `${esc(no + itemName)}<br>` +
+        `　${strikeHtml_(originalPrice)} ${esc(arrow)} ${strikeHtml_(discountPrice)}`;
+    }
   }
 
   return `
