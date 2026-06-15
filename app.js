@@ -113,7 +113,7 @@ const pages = [
   { title:"② 撮影の基本情報", desc:"撮影内容とご希望を教えてください。", fields:["shootingContents","shootingPlace","participants","mainPersonName"] },
   { title:"③ 着付け・レンタル", desc:"必要な場合だけ追加項目が出ます。", fields:["dressingNeed","dressingDetail","dressingPlace","dressingAddressChoice","parkingSpace","kimonoRental"] },
   { title:"④ プラン選択", desc:"プランを選ぶと、次の選択肢が出ます。", fields:["planType","planStudio","planOutcall","planSet","options"] },
-  { title:"⑤ 仕上げ（確認＆同意）", desc:"送信前に内容確認と同意をお願いします。", fields:["paymentMethod","howKnew","message","agreements","review"] }
+  { title:"⑤ 仕上げ(確認＆同意)", desc:"送信前に内容確認と同意をお願いします。", fields:["paymentMethod","howKnew","message","agreements","review"] }
 ];
 
 // セット候補
