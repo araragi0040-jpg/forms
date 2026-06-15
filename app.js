@@ -279,12 +279,12 @@ function cleanupByBranch(){
 
   // options 表示順固定
   const optMaster = [
-    "① A4木製ガラスパネル(305×220mm) ¥20,000",
-    "② 2面アルバム(216×216mm) ¥25,000",
-    "③ 3面アルバム(216×216mm) ¥30,000",
-    "④ アルバム10P M(216×216mm) ¥35,000",
-    "⑤ アルバム10P L(305×305mm) ¥40,000",
-    "⑥ クリスタルアルバム10P(301×299mm) ¥55,000"
+    "① A4木製ガラスパネル(305×220mm) <s>¥20,000</s> ➡ ¥18,000",
+    "② 2面アルバム(216×216mm) <s>¥25,000</s> ➡ ¥22,500",
+    "③ 3面アルバム(216×216mm) <s>¥30,000</s> ➡ ¥27,000",
+    "④ アルバム10P M(216×216mm) <s>¥35,000</s> ➡ ¥31,500",
+    "⑤ アルバム10P L(305×305mm) <s>¥40,000</s> ➡ ¥36,000",
+    "⑥ クリスタルアルバム10P(301×299mm) <s>¥55,000</s> ➡ ¥49,500"
   ];
   if (Array.isArray(a.options)) {
     a.options = a.options
@@ -406,7 +406,7 @@ function renderCheckbox(key, title, required, options, hint, other){
     });
 
     const span = document.createElement("div");
-    span.textContent = labelText;
+    span.innerHTML = strikeHtml_(labelText);
     label.appendChild(input);
     label.appendChild(span);
     wrap.appendChild(label);
@@ -893,12 +893,12 @@ pageRoot.appendChild(calBox);
   if (page.fields.includes("options")){
     pageRoot.appendChild(
       renderCheckbox("options","パネル/アルバム(任意)",false,[
-        "① A4木製ガラスパネル(305×220mm) ¥20,000",
-        "② 2面アルバム(216×216mm) ¥25,000",
-        "③ 3面アルバム(216×216mm) ¥30,000",
-        "④ アルバム10P M(216×216mm) ¥35,000",
-        "⑤ アルバム10P L(305×305mm) ¥40,000",
-        "⑥ クリスタルアルバム10P(301×299mm) ¥55,000"
+    "① A4木製ガラスパネル(305×220mm) <s>¥20,000</s> ➡ ¥18,000",
+    "② 2面アルバム(216×216mm) <s>¥25,000</s> ➡ ¥22,500",
+    "③ 3面アルバム(216×216mm) <s>¥30,000</s> ➡ ¥27,000",
+    "④ アルバム10P M(216×216mm) <s>¥35,000</s> ➡ ¥31,500",
+    "⑤ アルバム10P L(305×305mm) <s>¥40,000</s> ➡ ¥36,000",
+    "⑥ クリスタルアルバム10P(301×299mm) <s>¥55,000</s> ➡ ¥49,500"
       ],"ご予約時のご注文に限り → 表記価格より10%OFF")
     );
   }
@@ -1045,6 +1045,12 @@ function esc(s){
     .replaceAll('"',"&quot;").replaceAll("'","&#39;");
 }
 
+function strikeHtml_(text){
+  return esc(text)
+    .replaceAll("&lt;s&gt;", "<s>")
+    .replaceAll("&lt;/s&gt;", "</s>");
+}
+
 function buildReviewHTML(){
   const a = state.answers;
 
@@ -1157,7 +1163,7 @@ function rowL2NoMark(text, group){
     <div class="rv rv-l2 rv-l2-nomark${g}">
       <div class="rv-mark"></div>
       <div class="rv-body">
-        <div class="rv-value">${esc(text)}</div>
+        <div class="rv-value">${strikeHtml_(text)}</div>
       </div>
     </div>
   `;
