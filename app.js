@@ -588,6 +588,8 @@ if (page.fields.includes("dressingNeed")) {
     const dateInput = document.createElement("input");
     dateInput.type = "date";
     dateInput.value = state.answers.preferredDate || "";
+    dateInput.defaultValue = "";
+    dateInput.autocomplete = "off";
     dateInput.addEventListener("change", ()=>{
       clearError();
       state.answers.preferredDate = dateInput.value;
