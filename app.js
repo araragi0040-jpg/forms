@@ -1159,11 +1159,20 @@ function rowL2(text, group = ""){
 }
 function rowL2NoMark(text, group){
   const g = group ? ` grp-${group}` : "";
+
+  let displayHtml = strikeHtml_(text);
+
+  // 内容確認のパネル/アルバム欄のみ、⑥だけ3段表示にする
+  if (group === "panel" && String(text).startsWith("⑥ クリスタルアルバム10P")) {
+    displayHtml = strikeHtml_(text)
+      .replace(" <s>¥55,000</s> ➡ 10%OFF ¥49,500", "<br><s>¥55,000</s><br>➡ 10%OFF ¥49,500");
+  }
+
   return `
     <div class="rv rv-l2 rv-l2-nomark${g}">
       <div class="rv-mark"></div>
       <div class="rv-body">
-        <div class="rv-value">${strikeHtml_(text)}</div>
+        <div class="rv-value">${displayHtml}</div>
       </div>
     </div>
   `;
