@@ -1162,10 +1162,12 @@ function rowL2NoMark(text, group){
 
   let displayHtml = strikeHtml_(text);
 
-  // 内容確認のパネル/アルバム欄のみ、⑥だけ3段表示にする
+  // 内容確認のパネル/アルバム欄のみ、⑥をスマホで見やすい3段表示にする
   if (group === "panel" && String(text).startsWith("⑥ クリスタルアルバム10P")) {
-    displayHtml = strikeHtml_(text)
-      .replace(" <s>¥55,000</s> ➡ 10%OFF ¥49,500", "<br><s>¥55,000</s><br>➡ 10%OFF ¥49,500");
+    displayHtml =
+      `⑥ クリスタルアルバム10P<br>` +
+      `(301×299mm)<br>` +
+      `<s>¥55,000</s> ➡ 10%OFF ¥49,500`;
   }
 
   return `
