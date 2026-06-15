@@ -22,8 +22,7 @@ const CONFIG = {
 内容を受け付けました。
 
 下記の内容で承っておりますので、ご確認ください。
-（内容確認のうえ、担当よりご連絡いたします）
-
+(内容確認のうえ、担当よりご連絡いたします)
 `,
   CUSTOMER_BODY_FOOTER:
 `
@@ -147,24 +146,36 @@ function submitReservation(payload) {
     const submissionId = generateSubmissionId_(sheet);
 
     if (a.dressingNeed === "無し") {
-      if (!isSlotCurrentlyAvailable_(a.preferredDate, a.preferredTime)) {
-        throw new Error("選択した時間帯はすでに埋まっています。日付を選び直して空き枠を再選択してください。");
-      }
+  if (!isSlotCurrentlyAvailable_(a.preferredDate, a.preferredTime)) {
+    throw new Error("選択した時間帯はすでに埋まっています。日付を選び直して空き枠を再選択してください。");
+  }
 
-      const slot = getSlotWindow_(a.preferredDate, a.preferredTime);
-      const title = String(a.name || "").trim() || "予約";
-      const description = [
-      `メールアドレス：${String(a.email || "").trim()}`,
-      `電話番号：${String(a.phone || "").trim()}`,
-      `撮影場所：${String(a.shootingPlace || "").trim()}`
-      ]
-      .filter(line => !line.endsWith("："))
-      .join("\n");
+  const slot = getSlotWindow_(a.preferredDate, a.preferredTime);
 
-      getCalendar_().createEvent(title, slot.start, slot.end, {
-      description: description
-      });
-      }
+  const shootingContentsText = Array.isArray(a.shootingContents)
+    ? a.shootingContents
+        .map(x => x === "その他"
+          ? `その他（${String(a.shootingContentsOther || "").trim()}）`
+          : String(x || "").trim()
+        )
+        .filter(Boolean)
+        .join("、")
+    : String(a.shootingContents || "").trim();
+
+  const titleName = String(a.name || "").trim() || "お客様";
+  const titleContent = shootingContentsText || "撮影";
+  const title = `${titleName}_${titleContent}`;
+
+  // お客様へ送信しているメール本文と同じ内容をカレンダー本文に入れる
+  const description = buildCustomerMailBody_(a, submissionId);
+
+  const event = getCalendar_().createEvent(title, slot.start, slot.end, {
+    description: description
+  });
+
+  // 予定の色：トマト（赤）
+  event.setColor(CalendarApp.EventColor.RED);
+}
 
     const rowObj = buildRowObject_(a, submissionId);
     const map = buildHeaderKeyMap_();
@@ -269,7 +280,7 @@ function validateAnswers_(a) {
   if (contents.includes("その他")) {
     const other = trim(a.shootingContentsOther);
     if (!other) throw new Error("撮影内容で「その他」を選んだ場合は内容を入力してください。");
-    if (other.length > 500) throw new Error("撮影内容（その他）が長すぎます。");
+    if (other.length > 500) throw new Error("撮影内容(その他)が長すぎます。");
     a.shootingContentsOther = other;
   } else {
     a.shootingContentsOther = "";
@@ -315,7 +326,7 @@ function validateAnswers_(a) {
 
     if (dressingPlace === "ご自宅") {
       const choice = trim(a.dressingAddressChoice);
-      if (!choice) throw new Error("着付け住所（同上/その他）は必須です。");
+      if (!choice) throw new Error("着付け住所(同上/その他)は必須です。");
       if (!["同上", "その他"].includes(choice)) {
         throw new Error("着付け住所の選択が不正です。");
       }
@@ -324,7 +335,7 @@ function validateAnswers_(a) {
       if (choice === "その他") {
         const otherAddr = trim(a.dressingAddressOther);
         if (!otherAddr) throw new Error("着付け住所の「その他」を入力してください。");
-        if (otherAddr.length > 500) throw new Error("着付け住所（その他）が長すぎます。");
+        if (otherAddr.length > 500) throw new Error("着付け住所(その他)が長すぎます。");
         a.dressingAddressOther = otherAddr;
       } else {
         a.dressingAddressOther = "";
@@ -378,7 +389,7 @@ function validateAnswers_(a) {
   if (kimonoRentalItems.includes("その他")) {
     const other = trim(a.kimonoRentalOther);
     if (!other) throw new Error("レンタルで「その他」を選んだ場合は内容を入力してください。");
-    if (other.length > 500) throw new Error("着物レンタル（その他）が長すぎます。");
+    if (other.length > 500) throw new Error("着物レンタル(その他)が長すぎます。");
     a.kimonoRentalOther = other;
   } else {
     a.kimonoRentalOther = "";
@@ -410,7 +421,7 @@ function validateAnswers_(a) {
       .map(x => trim(x))
       .filter(x => x && !x.startsWith("▼"));
 
-    if (cleaned.length === 0) throw new Error("セットプランの中身（写真館＋出張）を選択してください。");
+    if (cleaned.length === 0) throw new Error("セットプランの中身(写真館＋出張)を選択してください。");
     if (cleaned.length > 20) throw new Error("セットプランの選択数が多すぎます。");
     cleaned.forEach((x) => {
       if (x.length > 300) throw new Error("セットプランの内容が長すぎます。");
@@ -457,7 +468,7 @@ function validateAnswers_(a) {
   if (howKnew === "その他") {
     const howKnewOther = trim(a.howKnewOther);
     if (!howKnewOther) throw new Error("「その他」を選んだ場合は内容を入力してください。");
-    if (howKnewOther.length > 500) throw new Error("当店を何で知りましたか？（その他）が長すぎます。");
+    if (howKnewOther.length > 500) throw new Error("当店を何で知りましたか？(その他)が長すぎます。");
     a.howKnewOther = howKnewOther;
   } else {
     a.howKnewOther = "";
@@ -484,7 +495,7 @@ function buildHeaderKeyMap_(){
     "電話番号": "phone",
 
     "撮影内容": "shooting_contents",
-    "撮影内容（その他）": "shooting_contents_other",
+    "撮影内容(その他)": "shooting_contents_other",
 
     "撮影場所": "shooting_place",
     "ご参加人数": "participants",
@@ -493,14 +504,14 @@ function buildHeaderKeyMap_(){
     "着付けヘアセットご希望": "dressing_need",
     "着付け詳細": "dressing_detail",
     "着付け場所": "dressing_place",
-    "着付け場所（同上/その他）": "dressing_address_choice",
-    "着付け住所（その他）": "dressing_address_other",
+    "着付け場所(同上/その他)": "dressing_address_choice",
+    "着付け住所(その他)": "dressing_address_other",
     "駐車スペース有無": "parking_space",
     "希望日": "preferred_date",
     "希望時間帯": "preferred_time",
 
     "着物レンタル": "kimono_rental",
-    "着物レンタル（その他）": "kimono_rental_other",
+    "着物レンタル(その他)": "kimono_rental_other",
 
     "プラン種別": "plan_type",
     "写真館撮影プラン": "plan_studio",
@@ -510,7 +521,7 @@ function buildHeaderKeyMap_(){
     "オプション": "options",
     "お支払い方法": "payment_method",
     "当店を何で知りましたか？": "how_knew",
-    "当店を何で知りましたか？（その他）": "how_knew_other",
+    "当店を何で知りましたか？(その他)": "how_knew_other",
     "備考": "message",
 
     "プライバシー同意": "privacy_agree",
@@ -554,7 +565,7 @@ function buildHeaders_() {
     "電話番号",
 
     "撮影内容",
-    "撮影内容（その他）",
+    "撮影内容(その他)",
 
     "撮影場所",
     "ご参加人数",
@@ -563,14 +574,14 @@ function buildHeaders_() {
     "着付けヘアセットご希望",
     "着付け詳細",
     "着付け場所",
-    "着付け場所（同上/その他）",
-    "着付け住所（その他）",
+    "着付け場所(同上/その他)",
+    "着付け住所(その他)",
     "駐車スペース有無",
     "希望日",
     "希望時間帯",
 
     "着物レンタル",
-    "着物レンタル（その他）",
+    "着物レンタル(その他)",
 
     "プラン種別",
     "写真館撮影プラン",
@@ -580,7 +591,7 @@ function buildHeaders_() {
     "オプション",
     "お支払い方法",
     "当店を何で知りましたか？",
-    "当店を何で知りましたか？（その他）",
+    "当店を何で知りましたか？(その他)",
     "備考",
 
     "プライバシー同意",
@@ -675,6 +686,7 @@ function buildAdminMailBody_(a, submissionId) {
   lines.push("");
   lines.push("【回答内容】");
   lines.push(renderAnswerText_(a));
+  lines.push(buildAgreementContentText_());
   return lines.join("\n");
 }
 
@@ -685,20 +697,58 @@ function buildCustomerMailBody_(a, submissionId) {
   lines.push("");
   lines.push("【回答内容】");
   lines.push(renderAnswerText_(a));
-  lines.push("");
+  lines.push(buildAgreementContentText_());
   lines.push(CONFIG.CUSTOMER_BODY_FOOTER);
   return lines.join("\n");
 }
 
+
+function buildAgreementContentText_() {
+  return [
+    "━━━━━━━━━━━━━━", 
+    "■同意内容",
+    "━━━━━━━━━━━━━━",
+    "【個人情報の取扱い】",
+    "・ご入力いただいた情報は、ご予約対応・連絡・サービス提供の目的で利用します。",
+    "・第三者へ提供しません(法令に基づく場合を除きます)。",
+    "・必要に応じて、確認のためご連絡する場合があります。",
+    "",
+    "【キャンセル規定】",
+    "・日程変更/キャンセルは、出来るだけ早めにご連絡下さい。",
+    "・天候や体調不良など、事情ある場合は柔軟に対応させていただきます。",
+    "・お客様の都合で撮影をキャンセルする場合は以下のキャンセル料が発生します。",
+    "　撮影当日〜3日前　撮影料金の全額",
+    "　撮影日の4〜7日前　撮影料金の50%",
+    "　撮影日の8〜14日前　撮影料金の30%"
+  ].join("\n");
+}
+
 function toHtmlBody_(text) {
-  const safe = String(text ?? "")
+  const divider = "━━━━━━━━━━━━━━";
+
+  const escapeHtml = (s) => String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/^ +/gm, (m) => "&nbsp;".repeat(m.length))
-    .replace(/\n/g, "<br>");
+    .replace(/^ +/gm, (m) => "&nbsp;".repeat(m.length));
 
-  return `<html><body style="margin:0;padding:0;font-family:Arial,'Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo',sans-serif;font-size:14px;line-height:1.7;color:#222;">${safe}</body></html>`;
+  const allowStrikeHtml = (s) => escapeHtml(s)
+    .replace(/&lt;s&gt;/g, "<s>")
+    .replace(/&lt;\/s&gt;/g, "</s>");
+
+  const parts = String(text ?? "")
+    .split("\n")
+    .map((line) => {
+      if (line.trim() === divider) {
+        return `<div style="border-top:1px solid #999;width:14em;height:0;line-height:0;margin:2px 0;"></div>`;
+      }
+
+      return `${allowStrikeHtml(line)}<br>`;
+    });
+
+  const html = parts.join("").replace(/(<br>)+$/g, "");
+
+  return `<html><body style="margin:0;padding:0;font-family:Arial,'Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo',sans-serif;font-size:14px;line-height:1.7;color:#222;">${html}</body></html>`;
 }
 
 function renderAnswerText_(a) {
@@ -766,7 +816,6 @@ function renderAnswerText_(a) {
     if (kimonoItems.length > 0) {
       pushLabeledValueOrList_(lines, "着物レンタル希望", kimonoItems);
       hasContent = true;
-      lines.push("");
     }
 
     const planType = String(a.planType || "").trim();
@@ -776,10 +825,10 @@ function renderAnswerText_(a) {
     }
 
     if (planType.startsWith("写真館撮影")) {
-      pushLabeledValueOrList_(lines, "写真館プラン", a.planStudio);
+      pushLabeledValueOrList_(lines, "プラン内容", a.planStudio);
       if (String(a.planStudio || "").trim()) hasContent = true;
     } else if (planType.startsWith("出張撮影")) {
-      pushLabeledValueOrList_(lines, "出張プラン", a.planOutcall);
+      pushLabeledValueOrList_(lines, "プラン内容", a.planOutcall);
       if (String(a.planOutcall || "").trim()) hasContent = true;
     } else if (planType.startsWith("セットプラン")) {
       const cleanedSet = (Array.isArray(a.planSet) ? a.planSet : [])
@@ -806,18 +855,17 @@ function renderAnswerText_(a) {
         hasContent = true;
       }
     }
-    if (planType) {
-      lines.push("");
-    }
 
     const options = (Array.isArray(a.options) ? a.options : [])
       .map((x) => String(x ?? "").trim())
       .filter((x) => x !== "");
-    if (options.length > 0) {
-      pushLabeledValueOrList_(lines, "パネル/アルバム", options);
-      hasContent = true;
-      lines.push("");
-    }
+      if (options.length > 0) {
+       lines.push("  パネル/アルバム：");
+       options.forEach((x) => {
+       lines.push(`  ・${x}`);
+       });
+       hasContent = true;
+      }
 
     return hasContent ? lines.join("\n") : "";
   }
@@ -832,7 +880,7 @@ function renderAnswerText_(a) {
     ]),
     section_("撮影について", [
       ["撮影内容", toCsv(a.shootingContents)],
-      ["撮影内容（その他）", a.shootingContentsOther],
+      ["撮影内容(その他)", a.shootingContentsOther],
       ["撮影場所", a.shootingPlace],
       ["ご参加人数", a.participants],
       ["主役のお名前/英字表記", a.mainPersonName],
@@ -841,8 +889,8 @@ function renderAnswerText_(a) {
       ["着付けヘアセット希望", a.dressingNeed],
       ["着付け詳細", a.dressingDetail],
       ["着付け希望場所", a.dressingPlace],
-      ["着付け住所（同上/その他）", a.dressingAddressChoice],
-      ["着付け住所（その他）", a.dressingAddressOther],
+      ["着付け住所(同上/その他)", a.dressingAddressChoice],
+      ["着付け住所(その他)", a.dressingAddressOther],
       ["駐車スペース有無", a.parkingSpace],
       ["希望日", a.preferredDate],
       ["希望時間帯", a.preferredTime],
@@ -853,7 +901,7 @@ function renderAnswerText_(a) {
     ]),
     section_("その他", [
       ["何で知りましたか", a.howKnew],
-      ["紹介など（その他）", a.howKnewOther],
+      ["紹介など(その他)", a.howKnewOther],
       ["備考", a.message],
     ]),
     section_("同意", [
@@ -862,7 +910,7 @@ function renderAnswerText_(a) {
     ]),
   ].filter(Boolean);
 
-  return blocks.join("\n\n");
+  return blocks.join("\n");
 }
 
 function maskEmail_(email) {
@@ -956,13 +1004,13 @@ function isSlotCurrentlyAvailable_(dateStr, timeLabel) {
 }
 
 const PLAN_STUDIO_ = [
-  "【１番人気🥇】プレミアムプラン (全データ/A4木製ガラスパネル) ¥57,500→¥46,500",
-  "スタンダードプラン (全データ込み) ¥41,000",
-  "ライトプラン (5データのみ) ¥30,000 ※データはお客様セレクト"
+  "プレミアムプラン(全データ/A4木製ガラスパネル) ¥65,000→¥59,800",
+  "スタンダードプラン(全データ込み) ¥45,000",
+  "ライトプラン(データ5点) ¥35,000 ※データはお客様セレクト"
 ];
 
 const PLAN_OUTCALL_ = [
-  "プレミアムプラン (全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥75,000→¥69,800",
-  "【１番人気🥇】スタンダードプラン(全データ/2L木製ガラスパネル/2面台紙) ¥65,000→¥59,800",
-  "スマートプラン(全データ/2L木製ガラスパネル) ¥40,000"
+  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥80,000→¥69,800",
+  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) ¥70,000→¥59,800",
+  "スマートプラン(全データ/2L木製ガラスパネル) ¥45,000"
 ];
