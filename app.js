@@ -971,7 +971,7 @@ pageRoot.appendChild(calBox);
 
     const details2 = document.createElement("details");
     const sum2 = document.createElement("summary");
-    sum2.textContent = "キャンセル規定（タップで表示）";
+    sum2.textContent = "キャンセル規定(タップで表示)";
     const body2 = document.createElement("div");
     body2.className = "terms";
     body2.textContent =
