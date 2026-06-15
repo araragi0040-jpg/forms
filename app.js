@@ -405,8 +405,13 @@ function renderCheckbox(key, title, required, options, hint, other){
       rerenderAll();
     });
 
-    const span = document.createElement("div");
-    span.innerHTML = strikeHtml_(labelText);
+const span = document.createElement("div");
+
+if (key === "options") {
+  span.innerHTML = panelOptionHtml_(labelText);
+} else {
+  span.innerHTML = strikeHtml_(labelText);
+}
     label.appendChild(input);
     label.appendChild(span);
     wrap.appendChild(label);
@@ -1049,6 +1054,27 @@ function strikeHtml_(text){
   return esc(text)
     .replaceAll("&lt;s&gt;", "<s>")
     .replaceAll("&lt;/s&gt;", "</s>");
+}
+
+function panelOptionHtml_(text){
+  const raw = String(text || "").trim();
+
+  const match = raw.match(/^(①|②|③|④|⑤|⑥)\s*(.+?)\s+(<s>¥[\d,]+<\/s>|¥[\d,]+)\s*(→|➡)\s*(.+)$/);
+
+  if (!match) {
+    return strikeHtml_(raw);
+  }
+
+  const no = match[1];
+  const itemName = match[2];
+  const originalPrice = match[3];
+  const arrow = match[4];
+  const discountPrice = match[5];
+
+  return (
+    `${esc(no + itemName)}<br>` +
+    `　${strikeHtml_(originalPrice)} ${esc(arrow)} ${strikeHtml_(discountPrice)}`
+  );
 }
 
 function buildReviewHTML(){
