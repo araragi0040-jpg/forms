@@ -1398,10 +1398,6 @@ async function submitAll(){
     ? structuredClone(state.answers)
     : JSON.parse(JSON.stringify(state.answers));
 
-ensureHoneypotInput();
-const hpEl = document.querySelector(`input[name="${HONEYPOT_NAME}"][data-honeypot="1"]`);
-if (hpEl) hpEl.value = "";
-
 const payload = {
   formToken: state.formToken || "",
   website: "",
