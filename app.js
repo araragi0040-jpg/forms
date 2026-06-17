@@ -118,13 +118,13 @@ const pages = [
 
 // セット候補
 const PLAN_STUDIO = [
-  "プレミアムプラン(全データ/A4木製ガラスパネル) ¥65,000→¥59,800",
+  "プレミアムプラン(全データ/A4木製ガラスパネル) <s>¥65,000</s> → ¥59,800",
   "スタンダードプラン(全データ込み) ¥45,000",
   "ライトプラン(データ5点) ¥35,000 ※データはお客様セレクト"
 ];
 const PLAN_OUTCALL = [
-  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥80,000→¥69,800",
-  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) ¥70,000→¥59,800",
+  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) <s>¥80,000</s> → ¥69,800",
+  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) <s>¥70,000</s> → ¥59,800",
   "スマートプラン(全データ/2L木製ガラスパネル) ¥45,000"
 ];
 
@@ -273,18 +273,25 @@ function formatPhone(raw){
   return String(raw||"").replace(/\D/g,"");
 }
 
+function formatSlotLabel(slot){
+  const [h, m] = String(slot).split(":").map(Number);
+  const ampm = h < 12 ? "午前" : "午後";
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${ampm}${hour12}:${String(m).padStart(2, "0")}`;
+}
+
 // 分岐の不要値を掃除
 function cleanupByBranch(){
   const a = state.answers;
 
   // options 表示順固定
   const optMaster = [
-    "① A4木製ガラスパネル <s>¥20,000</s> ➡ ¥18,000",
-    "② 2面アルバム <s>¥25,000</s> ➡ ¥22,500",
-    "③ 3面アルバム <s>¥30,000</s> ➡ ¥27,000",
-    "④ アルバム10P M <s>¥35,000</s> ➡ ¥31,500",
-    "⑤ アルバム10P L <s>¥40,000</s> ➡ ¥36,000",
-    "⑥ クリスタルアルバム10P <s>¥55,000</s> ➡ ¥49,500"
+    "① A4木製ガラスパネル <s>¥20,000</s> → ¥18,000",
+    "② 2面アルバム <s>¥25,000</s> → ¥22,500",
+    "③ 3面アルバム <s>¥30,000</s> → ¥27,000",
+    "④ アルバム10P M <s>¥35,000</s> → ¥31,500",
+    "⑤ アルバム10P L <s>¥40,000</s> → ¥36,000",
+    "⑥ クリスタルアルバム10P <s>¥55,000</s> → ¥49,500"
   ];
   if (Array.isArray(a.options)) {
     a.options = a.options
@@ -359,19 +366,22 @@ function renderRadio(key, title, required, options, hint){
   wrap.className = "choices";
 
   options.forEach(opt=>{
+    const value = (typeof opt === "object") ? opt.value : opt;
+    const labelText = (typeof opt === "object") ? opt.label : opt;
+
     const label = document.createElement("label");
     label.className = "choice";
     const input = document.createElement("input");
     input.type = "radio";
     input.name = key;
-    input.value = opt;
-    input.checked = (state.answers[key] === opt);
+    input.value = value;
+    input.checked = (state.answers[key] === value);
     input.addEventListener("change", ()=>{
-      state.answers[key] = opt;
+      state.answers[key] = value;
       rerenderAll();
     });
     const span = document.createElement("div");
-    span.textContent = opt;
+    span.innerHTML = strikeHtml_(labelText);
     label.appendChild(input);
     label.appendChild(span);
     wrap.appendChild(label);
@@ -577,13 +587,6 @@ if (page.fields.includes("dressingNeed")) {
   );
 
   // ✅ カレンダー（着付け無しの時だけ）
-  function formatSlotLabel(slot){
-  const [h, m] = String(slot).split(":").map(Number);
-  const ampm = h < 12 ? "午前" : "午後";
-  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${ampm}${hour12}:${String(m).padStart(2, "0")}`;
-}
-  
   if (state.answers.dressingNeed === "無し") {
     const dateBox = makeInputBox(
       "ご希望日",
@@ -666,14 +669,8 @@ if (page.fields.includes("dressingNeed")) {
   "空いている日時をご確認のうえ、上の入力欄にご希望日時をご記入ください。"
 );
 
-/*const calendarUrl =
-  "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";*/
-
 const calendarUrl =
-  "https://calendar.google.com/calendar/embed?src=araragi0040%40gmail.com&ctz=Asia%2FTokyo";
-
-/* const calendarUrl =
-  "https://calendar.app.google/nF24uBwBLgW8bn9F7"; */
+  "https://calendar.app.google/yYBseAXUqA8TgFBp9";
 
 // 縮小率（0.7〜0.9くらいで調整）
 const previewScale = 0.78;
@@ -845,7 +842,10 @@ pageRoot.appendChild(calBox);
       renderRadio("planType","ご希望の撮影プラン",true,[
         "写真館撮影",
         "出張撮影 ※東大阪市のみ出張費無料",
-        "セットプラン(写真館&出張撮影) 合計金額 -5,000円OFF"
+        {
+          value: "セットプラン(写真館&出張撮影) 合計金額 -5,000円OFF",
+          label: "セットプラン(写真館&出張撮影)<br>合計金額 -5,000円OFF"
+        }
       ],"")
     );
   }
@@ -885,7 +885,7 @@ pageRoot.appendChild(calBox);
         rerenderAll();
       });
 
-      const span = document.createElement("div"); span.textContent = opt;
+      const span = document.createElement("div"); span.innerHTML = strikeHtml_(opt);
       label.appendChild(input); label.appendChild(span);
       wrap.appendChild(label);
     });
@@ -898,12 +898,12 @@ pageRoot.appendChild(calBox);
   if (page.fields.includes("options")){
     pageRoot.appendChild(
       renderCheckbox("options","パネル/アルバム(任意)",false,[
-    "① A4木製ガラスパネル <s>¥20,000</s> ➡ ¥18,000",
-    "② 2面アルバム <s>¥25,000</s> ➡ ¥22,500",
-    "③ 3面アルバム <s>¥30,000</s> ➡ ¥27,000",
-    "④ アルバム10P M <s>¥35,000</s> ➡ ¥31,500",
-    "⑤ アルバム10P L <s>¥40,000</s> ➡ ¥36,000",
-    "⑥ クリスタルアルバム10P <s>¥55,000</s> ➡ ¥49,500"
+    "① A4木製ガラスパネル <s>¥20,000</s> → ¥18,000",
+    "② 2面アルバム <s>¥25,000</s> → ¥22,500",
+    "③ 3面アルバム <s>¥30,000</s> → ¥27,000",
+    "④ アルバム10P M <s>¥35,000</s> → ¥31,500",
+    "⑤ アルバム10P L <s>¥40,000</s> → ¥36,000",
+    "⑥ クリスタルアルバム10P <s>¥55,000</s> → ¥49,500"
       ],"ご予約時のご注文に限り → 表記価格より10%OFF")
     );
   }
@@ -1053,7 +1053,10 @@ function esc(s){
 function strikeHtml_(text){
   return esc(text)
     .replaceAll("&lt;s&gt;", "<s>")
-    .replaceAll("&lt;/s&gt;", "</s>");
+    .replaceAll("&lt;/s&gt;", "</s>")
+    .replaceAll("&lt;br&gt;", "<br>")
+    .replaceAll("&lt;br/&gt;", "<br>")
+    .replaceAll("&lt;br /&gt;", "<br>");
 }
 
 function panelOptionHtml_(text){
@@ -1086,6 +1089,11 @@ function buildReviewHTML(){
   items.push(rowL1("お名前", a.name));
   items.push(rowL1("メール", a.email));
   items.push(rowL1("電話", formatPhone(a.phone)));
+  if (String(a.preferredDate || "").trim()) {
+    const timeLabel = a.preferredTime ? formatSlotLabel(a.preferredTime) : "";
+    const dateText = timeLabel ? `${a.preferredDate} ${timeLabel}` : a.preferredDate;
+    items.push(rowL1("ご希望日時", dateText, "mobile-break"));
+  }
 
   // 撮影内容
   {
@@ -1174,11 +1182,12 @@ function rowL1(label, value, extraClass = ""){
 }
 function rowL2(text, group = ""){
   const grp = group ? ` grp-${group}` : "";
+  const valueHtml = (group === "plan") ? strikeHtml_(text) : esc(text);
   return `
     <div class="rv rv-l2${grp}">
       <div class="rv-mark">┗</div>
       <div class="rv-body">
-        <div class="rv-value">${esc(text)}</div>
+        <div class="rv-value">${valueHtml}</div>
       </div>
     </div>
   `;
@@ -1193,8 +1202,8 @@ function rowL2NoMark(text, group){
     const raw = String(text || "").trim();
 
     // 例：
-    // ①A4木製ガラスパネル <s>¥20,000</s> ➡ 10%OFF ¥18,000
-    // ① A4木製ガラスパネル <s>¥20,000</s> ➡ 10%OFF ¥18,000
+    // ①A4木製ガラスパネル <s>¥20,000</s> → 10%OFF ¥18,000
+    // ① A4木製ガラスパネル <s>¥20,000</s> → 10%OFF ¥18,000
     const match = raw.match(/^(①|②|③|④|⑤|⑥)\s*(.+?)\s+(<s>¥[\d,]+<\/s>|¥[\d,]+)\s*(→|➡)\s*(.+)$/);
 
     if (match) {
@@ -1221,11 +1230,12 @@ function rowL2NoMark(text, group){
 }
 function rowL3(text, group = ""){
   const grp = group ? ` grp-${group}` : "";
+  const valueHtml = (group === "plan") ? strikeHtml_(text) : esc(text);
   return `
     <div class="rv rv-l3${grp}">
       <div class="rv-mark">・</div>
       <div class="rv-body">
-        <div class="rv-value">${esc(text)}</div>
+        <div class="rv-value">${valueHtml}</div>
       </div>
     </div>
   `;
