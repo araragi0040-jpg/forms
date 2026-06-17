@@ -1398,13 +1398,15 @@ async function submitAll(){
     ? structuredClone(state.answers)
     : JSON.parse(JSON.stringify(state.answers));
 
-  ensureHoneypotInput();
-  const hpEl = document.querySelector('input[name="website"][data-honeypot="1"]');
-  const payload = {
-    formToken: state.formToken || "",
-    website: hpEl ? hpEl.value : "",
-    answers: sendAnswers
-  };
+ensureHoneypotInput();
+const hpEl = document.querySelector(`input[name="${HONEYPOT_NAME}"][data-honeypot="1"]`);
+if (hpEl) hpEl.value = "";
+
+const payload = {
+  formToken: state.formToken || "",
+  website: "",
+  answers: sendAnswers
+};
 
   const prevNextDisabled = btnNext.disabled;
   const prevBackDisabled = btnBack.disabled;
