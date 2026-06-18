@@ -8,7 +8,6 @@
 const CONFIG = {
   SPREADSHEET_ID: "19ebajuqC4fYYVofkrPMXE2OSKVir76dOGYdsPoQA20w",
   SHEET_NAME: "フォーム",
-  /*ADMIN_EMAIL: "fujii@g-knowthyself.com,photoworks.toiro@gmail.com",*/
   ADMIN_EMAIL: "fujii@g-knowthyself.com",
   TERMS_VERSION: "2025-12-18",
   MIN_SUBMIT_SECONDS: 3,
@@ -494,6 +493,8 @@ function buildHeaderKeyMap_(){
     "ご住所": "address",
     "電話番号": "phone",
 
+    "ご希望日": "preferred_date",
+    "ご希望時間帯": "preferred_time",
     "撮影内容": "shooting_contents",
     "撮影内容(その他)": "shooting_contents_other",
 
@@ -507,8 +508,6 @@ function buildHeaderKeyMap_(){
     "着付け場所(同上/その他)": "dressing_address_choice",
     "着付け住所(その他)": "dressing_address_other",
     "駐車スペース有無": "parking_space",
-    "希望日": "preferred_date",
-    "希望時間帯": "preferred_time",
 
     "着物レンタル": "kimono_rental",
     "着物レンタル(その他)": "kimono_rental_other",
@@ -564,6 +563,8 @@ function buildHeaders_() {
     "ご住所",
     "電話番号",
 
+    "ご希望日",
+    "ご希望時間帯",
     "撮影内容",
     "撮影内容(その他)",
 
@@ -577,8 +578,6 @@ function buildHeaders_() {
     "着付け場所(同上/その他)",
     "着付け住所(その他)",
     "駐車スペース有無",
-    "希望日",
-    "希望時間帯",
 
     "着物レンタル",
     "着物レンタル(その他)",
@@ -679,11 +678,9 @@ function buildAdminMailBody_(a, submissionId) {
   const lines = [];
   lines.push("ご予約フォームが送信されました。");
   lines.push(`送信ID：${submissionId}`);
-  lines.push("");
   lines.push("【同意】");
   lines.push(`- 個人情報：${a.privacyAgree ? "同意" : "未同意"}`);
   lines.push(`- キャンセル：${a.cancelAgree ? "同意" : "未同意"}`);
-  lines.push("");
   lines.push("【回答内容】");
   lines.push(renderAnswerText_(a));
   lines.push(buildAgreementContentText_());
@@ -705,6 +702,7 @@ function buildCustomerMailBody_(a, submissionId) {
 
 function buildAgreementContentText_() {
   return [
+    "",
     "━━━━━━━━━━━━━━", 
     "■同意内容",
     "━━━━━━━━━━━━━━",
@@ -754,23 +752,30 @@ function toHtmlBody_(text) {
 function renderAnswerText_(a) {
   const toCsv = (v) => Array.isArray(v) ? v.join("、") : (v ?? "");
   const toAgree = (v) => v ? "同意" : "未同意";
+  const BLANK_ROW = "__BLANK_ROW__";
 
   function section_(title, rows){
-    const filtered = rows.filter(([_, v]) => String(v ?? "").trim() !== "");
-    if (filtered.length === 0) return "";
+  const filtered = rows.filter(([k, v]) => k === BLANK_ROW || String(v ?? "").trim() !== "");
+  if (filtered.length === 0) return "";
 
     const lines = [
+      "",
       "━━━━━━━━━━━━━━",
       `■ ${title}`,
       "━━━━━━━━━━━━━━"
     ];
     filtered.forEach(([k, v]) => {
-    if (k) {
+  if (k === BLANK_ROW) {
+    lines.push("");
+    return;
+  }
+
+  if (k) {
     lines.push(`  ${k}：${v}`);
-    } else {
-    lines.push(`  ${v}`); // ← コロンなし
-    }
-    });
+  } else {
+    lines.push(`  ${v}`);
+  }
+});
     return lines.join("\n");
   }
 
@@ -801,22 +806,12 @@ function renderAnswerText_(a) {
 
      function buildPlanProductSection_() {
      const lines = [
+      "",
       "━━━━━━━━━━━━━━",
-      "■ プラン・商品",
+      "■ 撮影プラン・商品について",
       "━━━━━━━━━━━━━━"
     ];
     let hasContent = false;
-
-    const kimonoItems = (Array.isArray(a.kimonoRentalItems) ? a.kimonoRentalItems : [])
-      .map((x) => String(x ?? "").trim())
-      .filter((x) => x !== "")
-      .map((x) => (x === "その他"
-        ? `その他（${String(a.kimonoRentalOther || "").trim()}）`
-        : x));
-    if (kimonoItems.length > 0) {
-      pushLabeledValueOrList_(lines, "着物レンタル希望", kimonoItems);
-      hasContent = true;
-    }
 
     const planType = String(a.planType || "").trim();
     if (planType) {
@@ -860,6 +855,7 @@ function renderAnswerText_(a) {
       .map((x) => String(x ?? "").trim())
       .filter((x) => x !== "");
       if (options.length > 0) {
+       lines.push("");
        lines.push("  パネル/アルバム：");
        options.forEach((x) => {
        lines.push(`  ・${x}`);
@@ -870,6 +866,14 @@ function renderAnswerText_(a) {
     return hasContent ? lines.join("\n") : "";
   }
 
+  const kimonoRentalDisplay = (Array.isArray(a.kimonoRentalItems) ? a.kimonoRentalItems : [])
+  .map((x) => String(x ?? "").trim())
+  .filter((x) => x !== "")
+  .map((x) => (x === "その他"
+    ? `その他（${String(a.kimonoRentalOther || "").trim()}）`
+    : x))
+  .join("、");
+
   const blocks = [
     section_("連絡先", [
       ["お名前", a.name],
@@ -878,22 +882,23 @@ function renderAnswerText_(a) {
       ["ご住所", a.address],
       ["お電話番号", a.phone],
     ]),
-    section_("撮影について", [
+    section_("撮影詳細について", [
+      ["ご希望日", a.preferredDate],
+      ["ご希望時間帯", a.preferredTime],
       ["撮影内容", toCsv(a.shootingContents)],
       ["撮影内容(その他)", a.shootingContentsOther],
       ["撮影場所", a.shootingPlace],
       ["ご参加人数", a.participants],
       ["主役のお名前/英字表記", a.mainPersonName],
     ]),
-    section_("着付け・日程", [
+    section_("着付け・着物レンタルについて", [
       ["着付けヘアセット希望", a.dressingNeed],
+      ["着物レンタル希望", kimonoRentalDisplay],
       ["着付け詳細", a.dressingDetail],
       ["着付け希望場所", a.dressingPlace],
       ["着付け住所(同上/その他)", a.dressingAddressChoice],
       ["着付け住所(その他)", a.dressingAddressOther],
       ["駐車スペース有無", a.parkingSpace],
-      ["希望日", a.preferredDate],
-      ["希望時間帯", a.preferredTime],
     ]),
     buildPlanProductSection_(),
     section_("お支払い方法", [
