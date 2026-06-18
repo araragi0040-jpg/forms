@@ -597,6 +597,8 @@ if (page.fields.includes("dressingNeed")) {
     dateInput.value = state.answers.preferredDate || "";
     dateInput.defaultValue = "";
     dateInput.autocomplete = "off";
+    dateInput.setAttribute("autocomplete", "off");
+    dateInput.setAttribute("inputmode", "none");
     dateInput.addEventListener("change", ()=>{
       clearError();
       state.answers.preferredDate = dateInput.value;
