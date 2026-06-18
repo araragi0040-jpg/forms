@@ -236,7 +236,6 @@ async function fetchSlots(dateStr){
   state.slotsDate = date;
   state.availableSlots = [];
   state.answers.preferredTime = "";
-  render();
 
   try {
     const res = await fetch(`${API_BASE}?action=slots&date=${encodeURIComponent(date)}`, {
