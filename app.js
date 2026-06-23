@@ -113,7 +113,7 @@ const pages = [
   { title:"② 撮影の基本情報", desc:"撮影内容とご希望を教えてください。", fields:["shootingContents","shootingPlace","participants","mainPersonName"] },
   { title:"③ 着付け・レンタル", desc:"必要な場合だけ追加項目が出ます。", fields:["dressingNeed","dressingDetail","dressingPlace","dressingAddressChoice","parkingSpace","kimonoRental"] },
   { title:"④ プラン選択", desc:"プランを選ぶと、次の選択肢が出ます。", fields:["planType","planStudio","planOutcall","planSet","options"] },
-  { title:"⑤ 仕上げ(確認＆同意)", desc:"送信前に内容確認と同意をお願いします。", fields:["paymentMethod","howKnew","message","agreements","review"] }
+  { title:"⑤ 確認＆同意", desc:"送信前に内容確認と同意をお願いします。", fields:["paymentMethod","howKnew","message","agreements","review"] }
 ];
 
 // セット候補
@@ -380,7 +380,12 @@ function renderRadio(key, title, required, options, hint){
       rerenderAll();
     });
     const span = document.createElement("div");
-    span.innerHTML = strikeHtml_(labelText);
+
+if (key === "planStudio" || key === "planOutcall") {
+  span.innerHTML = planOptionHtml_(labelText);
+} else {
+  span.innerHTML = strikeHtml_(labelText);
+}
     label.appendChild(input);
     label.appendChild(span);
     wrap.appendChild(label);
@@ -886,7 +891,13 @@ pageRoot.appendChild(calBox);
         rerenderAll();
       });
 
-      const span = document.createElement("div"); span.innerHTML = strikeHtml_(opt);
+      const span = document.createElement("div");
+
+if (isHeader) {
+  span.innerHTML = strikeHtml_(opt);
+} else {
+  span.innerHTML = planOptionHtml_(opt);
+}
       label.appendChild(input); label.appendChild(span);
       wrap.appendChild(label);
     });
@@ -909,7 +920,7 @@ pageRoot.appendChild(calBox);
     );
   }
 
-  // ⑤ 仕上げ
+  // ⑤ 確認&同意
   if (page.fields.includes("paymentMethod")){
     pageRoot.appendChild(renderRadio("paymentMethod","お支払い方法",true,["現金払い","お振り込み"],""));
   }
@@ -1081,6 +1092,16 @@ function panelOptionHtml_(text){
   );
 }
 
+function planOptionHtml_(text){
+  const html = strikeHtml_(text);
+
+  // 最初に出てくる金額の手前で改行
+  return html.replace(
+    /\s+(?=(?:<s>)?¥[\d,]+)/,
+    "<br>"
+  );
+}
+
 function buildReviewHTML(){
   const a = state.answers;
 
@@ -1183,7 +1204,7 @@ function rowL1(label, value, extraClass = ""){
 }
 function rowL2(text, group = ""){
   const grp = group ? ` grp-${group}` : "";
-  const valueHtml = (group === "plan") ? strikeHtml_(text) : esc(text);
+  const valueHtml = (group === "plan") ? planOptionHtml_(text) : esc(text);
   return `
     <div class="rv rv-l2${grp}">
       <div class="rv-mark">┗</div>
@@ -1231,7 +1252,7 @@ function rowL2NoMark(text, group){
 }
 function rowL3(text, group = ""){
   const grp = group ? ` grp-${group}` : "";
-  const valueHtml = (group === "plan") ? strikeHtml_(text) : esc(text);
+  const valueHtml = (group === "plan") ? planOptionHtml_(text) : esc(text);
   return `
     <div class="rv rv-l3${grp}">
       <div class="rv-mark">・</div>
