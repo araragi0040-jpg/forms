@@ -738,8 +738,8 @@ function toHtmlBody_(text) {
     .split("\n")
     .map((line) => {
       if (line.trim() === divider) {
-        return `<div style="border-top:1px solid #999;width:14em;height:0;line-height:0;margin:2px 0;"></div>`;
-      }
+  return `<div style="display:block;border-top:1px solid #999;width:14em;height:0;font-size:0;line-height:0;margin:0;padding:0;"></div>`;
+}
 
       return `${allowStrikeHtml(line)}<br>`;
     });
@@ -1009,13 +1009,13 @@ function isSlotCurrentlyAvailable_(dateStr, timeLabel) {
 }
 
 const PLAN_STUDIO_ = [
-  "プレミアムプラン(全データ/A4木製ガラスパネル) ¥65,000→¥59,800",
+  "プレミアムプラン(全データ/A4木製ガラスパネル) <s>¥65,000</s> → ¥59,800",
   "スタンダードプラン(全データ込み) ¥45,000",
   "ライトプラン(データ5点) ¥35,000 ※データはお客様セレクト"
 ];
 
 const PLAN_OUTCALL_ = [
-  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) ¥80,000→¥69,800",
-  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) ¥70,000→¥59,800",
+  "プレミアムプラン(全データ/2L木製ガラスパネル/アルバム10P Mサイズ) <s>¥80,000</s> → ¥69,800",
+  "スタンダードプラン(全データ/2L木製ガラスパネル/2面アルバム) <s>¥70,000</s> → ¥59,800",
   "スマートプラン(全データ/2L木製ガラスパネル) ¥45,000"
 ];
